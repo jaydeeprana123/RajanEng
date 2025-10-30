@@ -1,0 +1,5 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M7.2 21.6a.8.8 0 0 1 .8-.8h16a.8.8 0 0 1 .8.8V24a.8.8 0 0 1-.8.8H8a.8.8 0 0 1-.8-.8v-2.4zm1.6.8v.8h14.4v-.8H8.8z" fill="#3093BB"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M19.2 12.8a.8.8 0 0 1 .8-.8h2.4a.8.8 0 0 1 .8.8v8.8a.8.8 0 0 1-.8.8H20a.8.8 0 0 1-.8-.8v-8.8zm1.6.8v7.2h.8v-7.2h-.8zM14 12.8a.8.8 0 0 1 .8-.8h2.4a.8.8 0 0 1 .8.8v8.8a.8.8 0 0 1-.8.8h-2.4a.8.8 0 0 1-.8-.8v-8.8zm1.6.8v7.2h.8v-7.2h-.8zM8.8 12.8a.8.8 0 0 1 .8-.8H12a.8.8 0 0 1 .8.8v8.8a.8.8 0 0 1-.8.8H9.6a.8.8 0 0 1-.8-.8v-8.8zm1.6.8v7.2h.8v-7.2h-.8z" fill="#3093BB"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M15.703 7.257a.8.8 0 0 1 .594 0l8 3.2a.8.8 0 0 1 .503.743v1.6a.8.8 0 0 1-.8.8H8a.8.8 0 0 1-.8-.8v-1.6a.8.8 0 0 1 .503-.743l8-3.2zM8.8 11.742V12h14.4v-.258L16 8.862l-7.2 2.88z" fill="#3093BB"/>
+</svg>
