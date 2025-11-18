@@ -4,6 +4,8 @@
 
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
+
 EmployeeListResponse employeeListResponseFromJson(String str) =>
     EmployeeListResponse.fromJson(json.decode(str));
 
@@ -83,6 +85,10 @@ class Employee {
   String? employerPfPercent;
   String? employerEpfPercent;
   String? status;
+  TextEditingController signInController = TextEditingController();
+  TextEditingController signOutController = TextEditingController();
+  TextEditingController remarksController = TextEditingController();
+  bool isChecked = false;
 
   Employee({
     this.id,

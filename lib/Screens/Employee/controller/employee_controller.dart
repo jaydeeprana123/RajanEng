@@ -19,6 +19,12 @@ class EmployeeController extends GetxController {
   RxList<Employee> employeeList = <Employee>[].obs;
   RxList<Employee> filteredList = <Employee>[].obs;
   Rx<AttendanceData> attendanceData = AttendanceData().obs;
+
+  Rx<TextEditingController> masterSignInController =
+      TextEditingController().obs;
+  Rx<TextEditingController> masterSignOutController =
+      TextEditingController().obs;
+
   Rx<TextEditingController> searchController = TextEditingController().obs;
 
   RxList<AttendanceBatch> attendanceList = <AttendanceBatch>[].obs;

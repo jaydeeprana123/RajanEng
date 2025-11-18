@@ -13,15 +13,7 @@ class _AttendanceEntryPageState extends State<AttendanceEntryPage> {
 
   bool selectAll = false;
 
-  TextEditingController masterSignIn = TextEditingController();
-  TextEditingController masterSignOut = TextEditingController();
-
   DateTime? attendanceDate;
-
-  Map<int, bool> selected = {};
-  Map<int, TextEditingController> signInControllers = {};
-  Map<int, TextEditingController> signOutControllers = {};
-  Map<int, TextEditingController> remarksControllers = {};
 
   @override
   void initState() {
@@ -33,19 +25,7 @@ class _AttendanceEntryPageState extends State<AttendanceEntryPage> {
 
   Future<void> loadData() async {
     await controller.callEmployeeListAPI(context);
-    setupControllers();
     setState(() {});
-  }
-
-  void setupControllers() {
-    for (var emp in controller.employeeList) {
-      int id = emp.id ?? 0;
-
-      selected[id] = false;
-      signInControllers[id] = TextEditingController();
-      signOutControllers[id] = TextEditingController();
-      remarksControllers[id] = TextEditingController();
-    }
   }
 
   // ---------------- TIME PICKER (AUTO-FILL CURRENT TIME) ----------------
@@ -137,30 +117,10 @@ class _AttendanceEntryPageState extends State<AttendanceEntryPage> {
 
                         // Toggle all employees' selection
                         controller.employeeList.forEach((emp) {
-                          int? id = emp.id;
-                          if (id != null) {
-                            selected[id] = selectAll;
-                          }
+                          emp.isChecked = selectAll;
                         });
 
                         // If selecting all, apply master times to all
-                        if (selectAll) {
-                          controller.employeeList.forEach((emp) {
-                            int? id = emp.id;
-
-                            if (id != null &&
-                                signInControllers[id] != null &&
-                                masterSignIn.text.isNotEmpty) {
-                              signInControllers[id]!.text = masterSignIn.text;
-                            }
-
-                            if (id != null &&
-                                signOutControllers[id] != null &&
-                                masterSignOut.text.isNotEmpty) {
-                              signOutControllers[id]!.text = masterSignOut.text;
-                            }
-                          });
-                        }
                       });
                     },
                   ),
@@ -169,23 +129,24 @@ class _AttendanceEntryPageState extends State<AttendanceEntryPage> {
                   Expanded(
                     child: GestureDetector(
                       onTap: () async {
-                        await pickTimeForController(masterSignIn);
+                        await pickTimeForController(
+                          controller.masterSignInController.value,
+                        );
 
                         // Apply to all SELECTED employees only
                         setState(() {
                           controller.employeeList.forEach((emp) {
                             int? id = emp.id;
-                            if (id != null &&
-                                selected[id] == true &&
-                                signInControllers[id] != null) {
-                              signInControllers[id]!.text = masterSignIn.text;
+                            if (emp.isChecked) {
+                              emp.signInController.text =
+                                  controller.masterSignInController.value.text;
                             }
                           });
                         });
                       },
                       child: AbsorbPointer(
                         child: TextField(
-                          controller: masterSignIn,
+                          controller: controller.masterSignInController.value,
                           decoration: InputDecoration(
                             labelText: "Master Sign In",
                           ),
@@ -200,23 +161,24 @@ class _AttendanceEntryPageState extends State<AttendanceEntryPage> {
                   Expanded(
                     child: GestureDetector(
                       onTap: () async {
-                        await pickTimeForController(masterSignOut);
+                        await pickTimeForController(
+                          controller.masterSignOutController.value,
+                        );
 
                         // Apply to all SELECTED employees only
                         setState(() {
                           controller.employeeList.forEach((emp) {
                             int? id = emp.id;
-                            if (id != null &&
-                                selected[id] == true &&
-                                signOutControllers[id] != null) {
-                              signOutControllers[id]!.text = masterSignOut.text;
+                            if (emp.isChecked) {
+                              emp.signOutController.text =
+                                  controller.masterSignOutController.value.text;
                             }
                           });
                         });
                       },
                       child: AbsorbPointer(
                         child: TextField(
-                          controller: masterSignOut,
+                          controller: controller.masterSignOutController.value,
                           decoration: InputDecoration(
                             labelText: "Master Sign Out",
                           ),
@@ -245,15 +207,10 @@ class _AttendanceEntryPageState extends State<AttendanceEntryPage> {
                           Row(
                             children: [
                               Checkbox(
-                                value: selected[id] ?? false,
+                                value: emp.isChecked,
                                 onChanged: (v) {
                                   setState(() {
-                                    selected[id] = v ?? false;
-
-                                    // Update selectAll checkbox state
-                                    selectAll = selected.values.every(
-                                      (val) => val == true,
-                                    );
+                                    emp.isChecked = v ?? false;
                                   });
                                 },
                               ),
@@ -266,16 +223,18 @@ class _AttendanceEntryPageState extends State<AttendanceEntryPage> {
                               Expanded(
                                 flex: 1,
                                 child: GestureDetector(
-                                  onTap: signInControllers[id] != null
-                                      ? () async {
-                                          await pickTimeForController(
-                                            signInControllers[id]!,
-                                          );
-                                        }
-                                      : null,
+                                  onTap: () async {
+                                    await pickTimeForController(
+                                      controller
+                                          .employeeList[index]
+                                          .signInController,
+                                    );
+                                  },
                                   child: AbsorbPointer(
                                     child: TextField(
-                                      controller: signInControllers[id],
+                                      controller: controller
+                                          .employeeList[index]
+                                          .signInController,
                                       decoration: InputDecoration(
                                         labelText: "Sign In",
                                       ),
@@ -290,16 +249,18 @@ class _AttendanceEntryPageState extends State<AttendanceEntryPage> {
                               Expanded(
                                 flex: 1,
                                 child: GestureDetector(
-                                  onTap: signOutControllers[id] != null
-                                      ? () async {
-                                          await pickTimeForController(
-                                            signOutControllers[id]!,
-                                          );
-                                        }
-                                      : null,
+                                  onTap: () async {
+                                    await pickTimeForController(
+                                      controller
+                                          .employeeList[index]
+                                          .signOutController,
+                                    );
+                                  },
                                   child: AbsorbPointer(
                                     child: TextField(
-                                      controller: signOutControllers[id],
+                                      controller: controller
+                                          .employeeList[index]
+                                          .signOutController,
                                       decoration: InputDecoration(
                                         labelText: "Sign Out",
                                       ),
@@ -311,7 +272,9 @@ class _AttendanceEntryPageState extends State<AttendanceEntryPage> {
                           ),
 
                           TextField(
-                            controller: remarksControllers[id],
+                            controller: controller
+                                .employeeList[index]
+                                .remarksController,
                             decoration: InputDecoration(labelText: "Remarks"),
                           ),
                         ],
@@ -348,14 +311,17 @@ class _AttendanceEntryPageState extends State<AttendanceEntryPage> {
     Map<String, String> signOutMap = {};
     Map<String, String> remarksMap = {};
 
-    selected.forEach((id, isChecked) {
-      if (isChecked) {
-        selectedIds.add(id);
-        signInMap[id.toString()] = signInControllers[id]!.text;
-        signOutMap[id.toString()] = signOutControllers[id]!.text;
-        remarksMap[id.toString()] = remarksControllers[id]!.text;
+    for (int i = 0; i < controller.employeeList.length; i++) {
+      if (controller.employeeList[i].isChecked) {
+        selectedIds.add(controller.employeeList[i].id ?? 0);
+        signInMap[(controller.employeeList[i].id ?? 0).toString()] =
+            controller.employeeList[i].signInController.text;
+        signOutMap[(controller.employeeList[i].id ?? 0).toString()] =
+            controller.employeeList[i].signOutController.text;
+        remarksMap[(controller.employeeList[i].id ?? 0).toString()] =
+            controller.employeeList[i].remarksController.text;
       }
-    });
+    }
 
     print("SELECTED IDs → $selectedIds");
     print("SIGN IN MAP → $signInMap");
