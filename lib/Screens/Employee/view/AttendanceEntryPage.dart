@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
+import 'package:intl/intl.dart';
 import '../controller/employee_controller.dart';
 
 class AttendanceEntryPage extends StatefulWidget {
+  final bool isEdit;
+  final String attendanceId;
+
+  const AttendanceEntryPage({
+    Key? key,
+    required this.isEdit,
+    required this.attendanceId,
+  }) : super(key: key);
+
   @override
   _AttendanceEntryPageState createState() => _AttendanceEntryPageState();
 }
@@ -12,8 +21,6 @@ class _AttendanceEntryPageState extends State<AttendanceEntryPage> {
   final EmployeeController controller = Get.put(EmployeeController());
 
   bool selectAll = false;
-
-  DateTime? attendanceDate;
 
   @override
   void initState() {
@@ -25,6 +32,13 @@ class _AttendanceEntryPageState extends State<AttendanceEntryPage> {
 
   Future<void> loadData() async {
     await controller.callEmployeeListAPI(context);
+    if (widget.isEdit) {
+      await controller.callAttendanceDetailsAPI(
+        context,
+        widget.attendanceId,
+        true,
+      );
+    }
     setState(() {});
   }
 
@@ -60,14 +74,14 @@ class _AttendanceEntryPageState extends State<AttendanceEntryPage> {
 
     DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: attendanceDate ?? now,
+      initialDate: controller.attendanceDate ?? now,
       firstDate: DateTime(2020),
       lastDate: DateTime(2040),
     );
 
     if (picked != null) {
       setState(() {
-        attendanceDate = picked;
+        controller.attendanceDate = picked;
       });
     }
   }
@@ -77,222 +91,256 @@ class _AttendanceEntryPageState extends State<AttendanceEntryPage> {
     return Scaffold(
       appBar: AppBar(title: Text("Attendance Entry")),
       body: Obx(() {
-        if (controller.employeeList.isEmpty) {
+        if (controller.employeeList.isEmpty && !controller.isLoading.value) {
           return Center(child: Text("No Employees Found"));
         }
 
-        return Column(
+        return Stack(
           children: [
-            // -------------------- DATE --------------------
-            InkWell(
-              onTap: pickDate,
-              child: Container(
-                width: double.infinity,
-                margin: EdgeInsets.all(12),
-                padding: EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  attendanceDate == null
-                      ? "Select Date"
-                      : "${attendanceDate!.day}-${attendanceDate!.month}-${attendanceDate!.year}",
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
-
-            // ---------------- MASTER SECTION ----------------
-            Container(
-              padding: EdgeInsets.all(12),
-              color: Colors.grey.shade200,
-              child: Row(
-                children: [
-                  Checkbox(
-                    value: selectAll,
-                    onChanged: (value) {
-                      setState(() {
-                        selectAll = value ?? false;
-
-                        // Toggle all employees' selection
-                        controller.employeeList.forEach((emp) {
-                          emp.isChecked = selectAll;
-                        });
-
-                        // If selecting all, apply master times to all
-                      });
-                    },
-                  ),
-
-                  // MASTER SIGN IN
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () async {
-                        await pickTimeForController(
-                          controller.masterSignInController.value,
-                        );
-
-                        // Apply to all SELECTED employees only
-                        setState(() {
-                          controller.employeeList.forEach((emp) {
-                            int? id = emp.id;
-                            if (emp.isChecked) {
-                              emp.signInController.text =
-                                  controller.masterSignInController.value.text;
-                            }
-                          });
-                        });
-                      },
-                      child: AbsorbPointer(
-                        child: TextField(
-                          controller: controller.masterSignInController.value,
-                          decoration: InputDecoration(
-                            labelText: "Master Sign In",
-                          ),
-                        ),
-                      ),
+            Column(
+              children: [
+                // -------------------- DATE --------------------
+                InkWell(
+                  onTap: pickDate,
+                  child: Container(
+                    width: double.infinity,
+                    margin: EdgeInsets.all(12),
+                    padding: EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      controller.attendanceDate == null
+                          ? "Select Date"
+                          : "${controller.attendanceDate!.day}-${controller.attendanceDate!.month}-${controller.attendanceDate!.year}",
+                      textAlign: TextAlign.center,
                     ),
                   ),
+                ),
 
-                  SizedBox(width: 10),
+                // ---------------- MASTER SECTION ----------------
+                Container(
+                  padding: EdgeInsets.all(12),
+                  color: Colors.grey.shade200,
+                  child: Row(
+                    children: [
+                      Checkbox(
+                        value: selectAll,
+                        onChanged: (value) {
+                          setState(() {
+                            selectAll = value ?? false;
 
-                  // MASTER SIGN OUT
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () async {
-                        await pickTimeForController(
-                          controller.masterSignOutController.value,
-                        );
+                            // Toggle all employees' selection
+                            controller.employeeList.forEach((emp) {
+                              emp.isChecked = selectAll;
+                            });
 
-                        // Apply to all SELECTED employees only
-                        setState(() {
-                          controller.employeeList.forEach((emp) {
-                            int? id = emp.id;
-                            if (emp.isChecked) {
-                              emp.signOutController.text =
-                                  controller.masterSignOutController.value.text;
-                            }
+                            // If selecting all, apply master times to all
                           });
-                        });
-                      },
-                      child: AbsorbPointer(
-                        child: TextField(
-                          controller: controller.masterSignOutController.value,
-                          decoration: InputDecoration(
-                            labelText: "Master Sign Out",
-                          ),
-                        ),
+                        },
                       ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
 
-            // ---------------- EMPLOYEE LIST ----------------
-            Expanded(
-              child: ListView.builder(
-                itemCount: controller.employeeList.length,
-                itemBuilder: (context, index) {
-                  final emp = controller.employeeList[index];
-                  final id = emp.id ?? 0;
+                      // MASTER SIGN IN
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () async {
+                            await pickTimeForController(
+                              controller.masterSignInController.value,
+                            );
 
-                  return Card(
-                    margin: EdgeInsets.all(10),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Checkbox(
-                                value: emp.isChecked,
-                                onChanged: (v) {
-                                  setState(() {
-                                    emp.isChecked = v ?? false;
-                                  });
-                                },
-                              ),
-
-                              Expanded(flex: 2, child: Text(emp.name ?? "")),
-
-                              SizedBox(width: 10),
-
-                              // INDIVIDUAL SIGN IN
-                              Expanded(
-                                flex: 1,
-                                child: GestureDetector(
-                                  onTap: () async {
-                                    await pickTimeForController(
-                                      controller
-                                          .employeeList[index]
-                                          .signInController,
-                                    );
-                                  },
-                                  child: AbsorbPointer(
-                                    child: TextField(
-                                      controller: controller
-                                          .employeeList[index]
-                                          .signInController,
-                                      decoration: InputDecoration(
-                                        labelText: "Sign In",
-                                      ),
-                                    ),
-                                  ),
+                            // Apply to all SELECTED employees only
+                            setState(() {
+                              controller.employeeList.forEach((emp) {
+                                int? id = emp.id;
+                                if (emp.isChecked) {
+                                  emp.signInController.text = controller
+                                      .masterSignInController
+                                      .value
+                                      .text;
+                                }
+                              });
+                            });
+                          },
+                          child: AbsorbPointer(
+                            child: TextField(
+                              controller:
+                                  controller.masterSignInController.value,
+                              decoration: InputDecoration(
+                                labelText: "Master Sign In",
+                                labelStyle: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
                                 ),
                               ),
+                            ),
+                          ),
+                        ),
+                      ),
 
-                              SizedBox(width: 10),
+                      SizedBox(width: 10),
 
-                              // INDIVIDUAL SIGN OUT
-                              Expanded(
-                                flex: 1,
-                                child: GestureDetector(
-                                  onTap: () async {
-                                    await pickTimeForController(
-                                      controller
-                                          .employeeList[index]
-                                          .signOutController,
-                                    );
-                                  },
-                                  child: AbsorbPointer(
-                                    child: TextField(
-                                      controller: controller
-                                          .employeeList[index]
-                                          .signOutController,
-                                      decoration: InputDecoration(
-                                        labelText: "Sign Out",
+                      // MASTER SIGN OUT
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () async {
+                            await pickTimeForController(
+                              controller.masterSignOutController.value,
+                            );
+
+                            // Apply to all SELECTED employees only
+                            setState(() {
+                              controller.employeeList.forEach((emp) {
+                                int? id = emp.id;
+                                if (emp.isChecked) {
+                                  emp.signOutController.text = controller
+                                      .masterSignOutController
+                                      .value
+                                      .text;
+                                }
+                              });
+                            });
+                          },
+                          child: AbsorbPointer(
+                            child: TextField(
+                              controller:
+                                  controller.masterSignOutController.value,
+                              decoration: InputDecoration(
+                                labelText: "Master Sign Out",
+                                labelStyle: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ---------------- EMPLOYEE LIST ----------------
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: controller.employeeList.length,
+                    itemBuilder: (context, index) {
+                      final emp = controller.employeeList[index];
+                      final id = emp.id ?? 0;
+
+                      return Card(
+                        margin: EdgeInsets.all(10),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Checkbox(
+                                    value: emp.isChecked,
+                                    onChanged: (v) {
+                                      setState(() {
+                                        emp.isChecked = v ?? false;
+                                      });
+                                    },
+                                  ),
+
+                                  Expanded(
+                                    flex: 2,
+                                    child: Text(emp.name ?? ""),
+                                  ),
+
+                                  SizedBox(width: 10),
+
+                                  // INDIVIDUAL SIGN IN
+                                  Expanded(
+                                    flex: 1,
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        await pickTimeForController(
+                                          controller
+                                              .employeeList[index]
+                                              .signInController,
+                                        );
+                                      },
+                                      child: AbsorbPointer(
+                                        child: TextField(
+                                          controller: controller
+                                              .employeeList[index]
+                                              .signInController,
+                                          decoration: InputDecoration(
+                                            labelText: "Sign In",
+                                            labelStyle: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
+
+                                  SizedBox(width: 10),
+
+                                  // INDIVIDUAL SIGN OUT
+                                  Expanded(
+                                    flex: 1,
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        await pickTimeForController(
+                                          controller
+                                              .employeeList[index]
+                                              .signOutController,
+                                        );
+                                      },
+                                      child: AbsorbPointer(
+                                        child: TextField(
+                                          controller: controller
+                                              .employeeList[index]
+                                              .signOutController,
+                                          decoration: InputDecoration(
+                                            labelText: "Sign Out",
+                                            labelStyle: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              TextField(
+                                controller: controller
+                                    .employeeList[index]
+                                    .remarksController,
+                                decoration: InputDecoration(
+                                  labelText: "Remarks",
                                 ),
                               ),
                             ],
                           ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
 
-                          TextField(
-                            controller: controller
-                                .employeeList[index]
-                                .remarksController,
-                            decoration: InputDecoration(labelText: "Remarks"),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
+                // ---------------- SUBMIT BUTTON ----------------
+                Padding(
+                  padding: EdgeInsets.all(12),
+                  child: ElevatedButton(
+                    onPressed: submitAttendance,
+                    child: Text("Submit Attendance"),
+                  ),
+                ),
+              ],
             ),
 
-            // ---------------- SUBMIT BUTTON ----------------
-            Padding(
-              padding: EdgeInsets.all(12),
-              child: ElevatedButton(
-                onPressed: submitAttendance,
-                child: Text("Submit Attendance"),
-              ),
-            ),
+            if (controller.isLoading.value)
+              Center(child: CircularProgressIndicator()),
           ],
         );
       }),
@@ -301,7 +349,7 @@ class _AttendanceEntryPageState extends State<AttendanceEntryPage> {
 
   // ---------------- SUBMIT ----------------
   void submitAttendance() {
-    if (attendanceDate == null) {
+    if (controller.attendanceDate == null) {
       Get.snackbar("Error", "Please select attendance date");
       return;
     }
@@ -328,6 +376,30 @@ class _AttendanceEntryPageState extends State<AttendanceEntryPage> {
     print("SIGN OUT MAP → $signOutMap");
     print("REMARKS MAP → $remarksMap");
 
-    Get.snackbar("Success", "Attendance Submitted");
+    if (widget.isEdit) {
+      controller.callUpdateAttendanceAPI(
+        context,
+        selectedIds,
+        signInMap,
+        signOutMap,
+        remarksMap,
+        convertIntoYYYYMMDD(controller.attendanceDate ?? DateTime(2025)),
+        widget.attendanceId,
+      );
+    } else {
+      controller.callAddAttendanceAPI(
+        context,
+        selectedIds,
+        signInMap,
+        signOutMap,
+        remarksMap,
+        convertIntoYYYYMMDD(controller.attendanceDate ?? DateTime(2025)),
+      );
+    }
+  }
+
+  String convertIntoYYYYMMDD(DateTime dateTime) {
+    String formattedDate = DateFormat('yyyy-MM-dd').format(dateTime);
+    return formattedDate; // Output: 13-11-2025
   }
 }

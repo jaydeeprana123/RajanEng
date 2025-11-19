@@ -5,6 +5,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import 'package:flutter/material.dart';
+import 'package:rajan_engineers/Screens/Authentication/view/LoginScreenView.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../Styles/my_colors.dart';
 import '../../../Styles/my_font.dart';
@@ -58,6 +60,16 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
           "Employees",
           style: TextStyle(fontFamily: fontMulishSemiBold, fontSize: 18),
         ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              clearToken();
+
+              Get.offAll(LoginPage());
+            },
+            icon: Icon(Icons.logout),
+          ),
+        ],
       ),
 
       body: Obx(
@@ -179,5 +191,10 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> clearToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.remove("token");
   }
 }

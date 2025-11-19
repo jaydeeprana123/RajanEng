@@ -39,6 +39,7 @@ dependencies:
   flutter_svg: ^2.0.14
   dotted_line: ^3.0.0
   shared_preferences: ^2.0.12
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:

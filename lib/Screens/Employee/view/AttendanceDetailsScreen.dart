@@ -41,7 +41,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
     // TODO: implement initState
     super.initState();
 
-    controller.callAttendanceDetailsAPI(context, widget.attendanceId);
+    controller.callAttendanceDetailsAPI(context, widget.attendanceId, false);
   }
 
   @override
@@ -67,7 +67,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Batch ID: ${controller.attendanceData.value.batchId ?? ''}",
+                    "Batch ID: ${controller.selectedAttendanceData.value.batchId ?? ''}",
                     style: TextStyle(
                       fontFamily: "fontInterMedium",
                       fontSize: 16,
@@ -75,7 +75,7 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
                   ),
                   SizedBox(height: 4),
                   Text(
-                    "Date: ${controller.attendanceData.value.attendanceDate?.toString().substring(0, 10) ?? ''}",
+                    "Date: ${controller.selectedAttendanceData.value.attendanceDate?.toString().substring(0, 10) ?? ''}",
                     style: TextStyle(
                       fontFamily: "fontInterRegular",
                       fontSize: 14,
@@ -90,8 +90,12 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
             // -------- ATTENDANCE LIST ----------
             Expanded(
               child:
-                  controller.attendanceData.value.attendances == null ||
-                      controller.attendanceData.value.attendances!.isEmpty
+                  controller.selectedAttendanceData.value.attendances == null ||
+                      controller
+                          .selectedAttendanceData
+                          .value
+                          .attendances!
+                          .isEmpty
                   ? Center(
                       child: Text(
                         "No Attendance Records",
@@ -99,11 +103,16 @@ class _AttendanceDetailPageState extends State<AttendanceDetailPage> {
                       ),
                     )
                   : ListView.builder(
-                      itemCount:
-                          controller.attendanceData.value.attendances!.length,
+                      itemCount: controller
+                          .selectedAttendanceData
+                          .value
+                          .attendances!
+                          .length,
                       itemBuilder: (context, index) {
-                        final attend =
-                            controller.attendanceData.value.attendances![index];
+                        final attend = controller
+                            .selectedAttendanceData
+                            .value
+                            .attendances![index];
 
                         return Card(
                           margin: const EdgeInsets.symmetric(

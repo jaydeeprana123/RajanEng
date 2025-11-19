@@ -28,7 +28,7 @@ class _HomeBottomNavState extends State<HomeBottomNav> {
 
   final List<Widget> _pages = [
     EmployeeListScreen(), // Employees screen
-    AttendanceListScreen(), // Salary screen (create placeholder)
+    // AttendanceListScreen(), // Salary screen (create placeholder)
     AttendanceListScreen(), // Attendance screen (create placeholder)
   ];
 
@@ -59,10 +59,10 @@ class _HomeBottomNavState extends State<HomeBottomNav> {
 
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.people), label: "Employees"),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.currency_rupee),
-            label: "Salary",
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.currency_rupee),
+          //   label: "Salary",
+          // ),
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_month),
             label: "Attendance",

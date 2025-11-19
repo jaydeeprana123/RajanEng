@@ -51,7 +51,10 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
         actions: [
           IconButton(
             onPressed: () {
-              Get.to(AttendanceEntryPage());
+              Get.to(
+                AttendanceEntryPage(isEdit: false, attendanceId: ""),
+              )?.then((value) => {controller.callAttendanceListAPI(context)});
+              ;
             },
             icon: Icon(Icons.add_circle),
           ),
@@ -86,58 +89,81 @@ class _AttendanceListScreenState extends State<AttendanceListScreen> {
                     ),
                   );
                 },
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Date
-                      Row(
-                        children: [
-                          Text(
-                            "Date: ",
-                            style: TextStyle(
-                              fontFamily: fontMulishSemiBold,
-                              fontSize: 14,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Date
+                            Row(
+                              children: [
+                                Text(
+                                  "Date: ",
+                                  style: TextStyle(
+                                    fontFamily: fontMulishSemiBold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                Text(
+                                  att.attendanceDate != null
+                                      ? "${att.attendanceDate!.day}-${att.attendanceDate!.month}-${att.attendanceDate!.year}"
+                                      : "N/A",
+                                  style: TextStyle(
+                                    fontFamily: fontMulishRegular,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          Text(
-                            att.attendanceDate != null
-                                ? "${att.attendanceDate!.day}-${att.attendanceDate!.month}-${att.attendanceDate!.year}"
-                                : "N/A",
-                            style: TextStyle(
-                              fontFamily: fontMulishRegular,
-                              fontSize: 14,
+
+                            const SizedBox(height: 4),
+
+                            // Total Employees
+                            Row(
+                              children: [
+                                Text(
+                                  "Total Employees: ",
+                                  style: TextStyle(
+                                    fontFamily: fontMulishSemiBold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                Text(
+                                  "${att.totalEmployees ?? 0}",
+                                  style: TextStyle(
+                                    fontFamily: fontMulishRegular,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
+
+                            const SizedBox(height: 4),
+                          ],
+                        ),
                       ),
+                    ),
 
-                      const SizedBox(height: 4),
-
-                      // Total Employees
-                      Row(
-                        children: [
-                          Text(
-                            "Total Employees: ",
-                            style: TextStyle(
-                              fontFamily: fontMulishSemiBold,
-                              fontSize: 14,
-                            ),
+                    IconButton(
+                      onPressed: () {
+                        Get.to(
+                          AttendanceEntryPage(
+                            isEdit: true,
+                            attendanceId: (att.id ?? 0).toString(),
                           ),
-                          Text(
-                            "${att.totalEmployees ?? 0}",
-                            style: TextStyle(
-                              fontFamily: fontMulishRegular,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 4),
-                    ],
-                  ),
+                        )?.then(
+                          (value) => {
+                            controller.callAttendanceListAPI(context),
+                          },
+                        );
+                      },
+                      icon: Icon(Icons.edit_calendar_sharp),
+                    ),
+                  ],
                 ),
               ),
             );
